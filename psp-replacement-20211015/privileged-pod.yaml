@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: privileged-pod
+spec:
+  hostPID: true            # <----
+  containers:
+    - name:  privileged
+      image: alpine:latest
+      args: [sleep, 1000d]
+      securityContext:
+        privileged: true   # <----

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: restricted-pod
+spec:
+  containers:
+    - name:  alpine
+      image: alpine:latest
+      args: [sleep, 1000d]
+      securityContext:
+        allowPrivilegeEscalation: false
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
