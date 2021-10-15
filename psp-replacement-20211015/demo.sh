@@ -7,13 +7,14 @@ set -euo pipefail
 ########################
 . ../vendor/demo-magic/demo-magic.sh
 
-DEMO_CMD_COLOR=$BLACK
+# DEMO_CMD_COLOR=$BLACK
+DEMO_COMMENT_COLOR=$DEMO_CMD_COLOR
+
 if [[ -z ${TYPE_SPEED:-} ]]; then
     TYPE_SPEED=""
 else
-    TYPE_SPEED=50
+    TYPE_SPEED=40
 fi
-
 
 NAMESPACE=demo
 
@@ -34,6 +35,7 @@ wait_ready() {
 }
 
 # hide the evidence
+printf '%.0s\n' {1..50}
 clear
 
 # Setup
@@ -44,7 +46,7 @@ pe "kubectl config set-context --current --namespace=$NAMESPACE"
 pe "cat privileged-pod.yaml" # Note privileged, hostPID
 pe "kubectl create -f privileged-pod.yaml"
 wait_ready pod/privileged-pod
-pe "kubectl exec privileged-pod -- cat /proc/1/cmdline" && echo
+# pe "kubectl exec privileged-pod -- cat /proc/1/cmdline" && echo
 pe "kubectl exec privileged-pod -- cat /proc/1/root/var/lib/kubelet/pki/kubelet.key"
 pe "kubectl delete -f privileged-pod.yaml --force"
 # pe $'kubectl run privilege-pod --rm -it --privileged --image=alpine --overrides=\'{"spec":{"hostPID": true}}\''
@@ -63,7 +65,7 @@ pe "cat baseline-pod.yaml"
 pe "kubectl create -f baseline-pod.yaml"
 wait_ready pod/baseline-pod
 # Of course this pod isn't running with HostPID or privileged, so the same attack no longer works.
-pe "kubectl exec baseline-pod -- cat /proc/1/cmdline" && echo
+# pe "kubectl exec baseline-pod -- cat /proc/1/cmdline" && echo
 pe "kubectl exec baseline-pod -- cat /proc/1/root/var/lib/kubelet/pki/kubelet.key" || true
 pe "kubectl delete -f baseline-pod.yaml --force"
 pe "clear"
@@ -103,11 +105,12 @@ pe "kubectl create -f restricted-pod.yaml"
 pe "clear"
 
 # What about deployments? When you create a deployment, the deployment controller creates the pod, not the user.
-pe "cat restricted-deployment.yaml"
-pe "kubectl create -f restricted-deployment.yaml"
+# pe "cat restricted-deployment.yaml"
+# pe "kubectl create -f restricted-deployment.yaml"
 # PodSecurity works for any built-in types with an embedded pod template.
 
 # One last thing - I didn't delete the pods this time. Let's see what happens if we update the enforce label again:
-pe "kubectl label namespace $NAMESPACE 'pod-security.kubernetes.io/enforce-version=latest' --overwrite"
+pe "kubectl get pods"
+pe "kubectl label --dry-run=server namespace $NAMESPACE 'pod-security.kubernetes.io/enforce-version=latest' --overwrite"
 
 p "# Fin!"
